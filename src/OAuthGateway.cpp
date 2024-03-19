@@ -1,12 +1,9 @@
-#include <Arduino.h>
-#include <HTTPClient.h>
-#include <WiFi.h>
+#include <../lib/WifiConfig.h>
 #include <../lib/MedpumRoutes.h>
 #include <../lib/MedplumCertificate.h>
-#include <../lib/MedpumDataProvider.h>
-#include <../lib/WifiConfig.h>
+#include <../lib/OAuthDataProvider.h>
 
-String token = "";
+String token;
 std::mutex mutexToken;
 
 void getAccessToken() {

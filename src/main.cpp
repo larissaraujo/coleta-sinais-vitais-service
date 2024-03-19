@@ -1,14 +1,13 @@
-#include <Arduino.h>
-#include <Wifi.h>
 #include <HTTPClient.h>
 #include <Wire.h>
 #include <../lib/MeasureVitalSigns.h>
-#include <../lib/MedpumDataProvider.h>
+#include <../lib/OAuthDataProvider.h>
+#include <../lib/ObservationDataProvider.h>
 
 xQueueHandle measurementsQueue;
 
 void taskMeasureVitalSigns(void *pvParameters) {
-  initializateSensors();
+  initializeSensors();
   while (true) {
     measureVitalSigns();
     //xQueueSend(measurementsQueue, &measurement, portMAX_DELAY);
@@ -31,6 +30,13 @@ void taskGetAcessToken(void *pvParameters) {
   }
 }
 
+void taskPostObservation(void *pvParameters) {
+  while (true) {
+    postObservation({});
+    vTaskDelay(15000);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   Wire.begin(SDA, SCL);
@@ -43,6 +49,7 @@ void setup() {
 
   xTaskCreatePinnedToCore(taskMeasureVitalSigns, "taskMeasureVitalSigns", 5000, NULL, 3, NULL, 1);
   xTaskCreatePinnedToCore(taskGetAcessToken, "taskGetAcessToken", 5000, NULL, 2, NULL, 0);
+  xTaskCreatePinnedToCore(taskPostObservation, "taskPostObservation", 5000, NULL, 3, NULL, 0);
 
   delay(500);
 }

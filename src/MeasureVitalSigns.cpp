@@ -53,7 +53,7 @@ void measureAsyncTemperature() {
   lastTempRequest = millis();
 }
 
-void initializateSensors() {
+void initializeSensors() {
   initializeDS18B20();
   measureAsyncTemperature();
   initializeMAX30100();

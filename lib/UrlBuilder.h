@@ -9,6 +9,9 @@ using std::string;
 using list = std::vector<std::string>;
 using pairs = std::map<std::string, std::string>;
 
+string formatPair(string key, string value);
+string formatPairs(bool query, pairs params);
+
 class url final {
   private:
     const list paths;
@@ -55,25 +58,7 @@ inline url& builder::build() const {
 inline url::url(const builder& object)
     : paths(object.paths), queries(object.queries), baseUrl(object.baseUrl){}
 
-string formatPair(string key, string value) {
-  return key.append("=").append(value);
-}
-
-string formatPairs(bool query, pairs params) {
-  auto it = params.begin();
-  if (it != params.end()) {
-    string formatted = query ? "?" : "";
-    formatted.append(formatPair(it->first, it->second));
-    for(it++; it != params.end(); it++) {
-      formatted.append("&");
-      formatted.append(formatPair(it->first, it->second));
-    }
-    return formatted;
-  }
-  return "";
-}
-
-string url::toString() {
+inline string url::toString() {
   string finalUrl = baseUrl;
   for (string path : paths) {
     finalUrl.append("/");
