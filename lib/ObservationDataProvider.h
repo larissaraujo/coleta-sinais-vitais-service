@@ -4,6 +4,6 @@
 #include <mutex>
 #include <../lib/fhir/ResourceModels.h>
 
-void postObservation(Observation observation);
+void postObservation(Observation observation, std::string token);
 
 #endif

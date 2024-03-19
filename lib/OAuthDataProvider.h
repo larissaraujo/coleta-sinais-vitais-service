@@ -3,7 +3,7 @@
 
 #include <mutex>
 
-extern String token;
+extern std::string token;
 extern std::mutex mutexToken;
 
 void getAccessToken();

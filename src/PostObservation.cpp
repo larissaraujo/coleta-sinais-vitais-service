@@ -3,7 +3,7 @@
 #include <../lib/MedplumCertificate.h>
 #include <../lib/ObservationDataProvider.h>
 
-void postObservation(Observation observation) {
+void postObservation(Observation observation, std::string token) {
     if (WiFi.status() == WL_CONNECTED) {
         HTTPClient http;
         auto requestUrl = OBSERVATION_URL;
@@ -12,7 +12,7 @@ void postObservation(Observation observation) {
             http.addHeader(headers::CONTENT_TYPE, parameterValues::FHIR_JSON);
             http.addHeader(headers::ACCEPT, "*/*");
             http.addHeader(headers::ACCEPT_ENCODING, "gzip, deflate, br");
-            http.addHeader(headers::AUTHORIZATION, "Bearer " + String("token"));
+            http.addHeader(headers::AUTHORIZATION, "Bearer " + String(token.c_str()));
             String requestBody;
             //convertObservation(observation, requestBody);
             Serial.println(requestBody);

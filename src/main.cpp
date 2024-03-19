@@ -17,7 +17,6 @@ void taskMeasureVitalSigns(void *pvParameters) {
 
 void taskGetAcessToken(void *pvParameters) {
   while (true) {
-    Serial.println(token);
     getAccessToken();
     mutexToken.lock();
     if (token != "") {
@@ -32,7 +31,9 @@ void taskGetAcessToken(void *pvParameters) {
 
 void taskPostObservation(void *pvParameters) {
   while (true) {
-    postObservation({});
+    mutexToken.lock();
+    postObservation({}, token);
+    mutexToken.unlock();
     vTaskDelay(15000);
   }
 }
@@ -49,7 +50,7 @@ void setup() {
 
   xTaskCreatePinnedToCore(taskMeasureVitalSigns, "taskMeasureVitalSigns", 5000, NULL, 3, NULL, 1);
   xTaskCreatePinnedToCore(taskGetAcessToken, "taskGetAcessToken", 5000, NULL, 2, NULL, 0);
-  xTaskCreatePinnedToCore(taskPostObservation, "taskPostObservation", 5000, NULL, 3, NULL, 0);
+  xTaskCreatePinnedToCore(taskPostObservation, "taskPostObservation", 5000, NULL, 2, NULL, 0);
 
   delay(500);
 }

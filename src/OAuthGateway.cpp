@@ -1,9 +1,10 @@
+# include <ArduinoJson.h>
 #include <../lib/WifiConfig.h>
 #include <../lib/MedpumRoutes.h>
 #include <../lib/MedplumCertificate.h>
 #include <../lib/OAuthDataProvider.h>
 
-String token;
+std::string token;
 std::mutex mutexToken;
 
 void getAccessToken() {
@@ -23,9 +24,17 @@ void getAccessToken() {
       // httpCode will be negative on error
       if (httpCode > 0) {
         if (httpCode == HTTP_CODE_OK) {
+          JsonDocument filter;
+          filter["access_token"] = true;
+          JsonDocument doc;
+          DeserializationError error = deserializeJson(doc, http.getStream(), DeserializationOption::Filter(filter));
+          if (error) {
+            Serial.println("deserializeJson() failed: " + String(error.c_str()));
+            return;
+          }
+          const char* accessToken = doc["access_token"]; 
           mutexToken.lock();
-          token = http.getString(); 
-          Serial.println(token);
+          token.assign(accessToken);
           mutexToken.unlock();
           return;
         }
