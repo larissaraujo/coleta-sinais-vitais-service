@@ -2,18 +2,17 @@
 #include <Wifi.h>
 #include <HTTPClient.h>
 #include <Wire.h>
-#include <../lib/Temperature.h>
+#include <../lib/MeasureVitalSigns.h>
 #include <../lib/MedpumDataProvider.h>
 
 xQueueHandle measurementsQueue;
 
-void taskMeasureTemperature(void *pvParameters) {
-  Measurement measurement;
+void taskMeasureVitalSigns(void *pvParameters) {
+  initializateSensors();
   while (true) {
-    measurement = measureTemperature();
-    Serial.println(measurement.value);
+    measureVitalSigns();
     //xQueueSend(measurementsQueue, &measurement, portMAX_DELAY);
-    vTaskDelay(TEMPERATURE_MEASUREMENT_PERIOD);
+    //vTaskDelay(1000);
   }
 }
 
@@ -34,6 +33,7 @@ void taskGetAcessToken(void *pvParameters) {
 
 void setup() {
   Serial.begin(115200);
+  Wire.begin(SDA, SCL);
   measurementsQueue = xQueueCreate(5, sizeof(float));
 
   if (measurementsQueue == NULL)  {
@@ -41,7 +41,7 @@ void setup() {
      while(1); /* Sem a fila o funcionamento esta comprometido. Nada mais deve ser feito. */
   } 
 
-  xTaskCreatePinnedToCore(taskMeasureTemperature, "taskMeasureTemperature", 1000, NULL, 3, NULL, 1);
+  xTaskCreatePinnedToCore(taskMeasureVitalSigns, "taskMeasureVitalSigns", 5000, NULL, 3, NULL, 1);
   xTaskCreatePinnedToCore(taskGetAcessToken, "taskGetAcessToken", 5000, NULL, 2, NULL, 0);
 
   delay(500);
