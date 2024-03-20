@@ -4,7 +4,6 @@
 #include <../lib/fhir/DataTypeModels.h>
 
 struct Observation {
-    const char* status;
     CodeableConcept code;
     const char* effectiveDateTime;
     Quantity valueQuantity;

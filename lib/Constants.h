@@ -50,6 +50,7 @@ namespace FHIR {
     const static char* OBSERVATION_QUANTITY_SYSTEM = "http://unitsofmeasure.org";
     const static char* PATIENT_ID = "Patient/c8b8a5c3-874f-4ce3-921f-d22e38d4bb09";
     const static char* RESOURCE_OBSERVATION = "Observation";
+    const static char* STATUS_PRELIMINARY = "preliminary";
 }
 
 #endif

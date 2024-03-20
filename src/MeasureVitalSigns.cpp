@@ -1,8 +1,11 @@
+#include <mutex>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
 #include "MAX30100_PulseOximeter.h"
+#include <../lib/VitalSigns.h>
 #include <../lib/MeasureVitalSigns.h>
+#include <../lib/QueueManager.h>
 
 // DS18B20
 #define ONE_WIRE_BUS 4
@@ -21,6 +24,7 @@ float temperature = 0.0;
 
 PulseOximeter pox;
 uint32_t lastOximeterReport = 0;
+float bpm, SpO2;
 
 void onBeatDetected() {
   Serial.println("Beat!");
@@ -64,6 +68,7 @@ void measureTemperature() {
   if (millis() - lastTempRequest >= TEMPERATURE_REPORTING_PERIOD_MS) {
     temperature = sensors.getTempCByIndex(0);
     Serial.println("Temperature: " + String(temperature) + " °C");
+    addMeasurementToQueue({temperature, millis(), VitalSignsEnum::TEMPERATURE});
     measureAsyncTemperature();
   }
 }
@@ -72,13 +77,13 @@ void measureHeartRateAndOximetry() {
   pox.update();
 
   if (millis() - lastOximeterReport > OXIMETER_REPORTING_PERIOD_MS) {
-    Serial.print("Heart rate: ");
-    Serial.print(pox.getHeartRate());
-    Serial.println("bpm");
-    Serial.print("SpO2: ");
-    Serial.print(pox.getSpO2());
-    Serial.println("%");
+    bpm = pox.getHeartRate();
+    SpO2 = pox.getSpO2();
     lastOximeterReport = millis();
+    Serial.println("Heart rate: " + String(bpm) + " bpm");
+    Serial.println("SpO2: " + String(SpO2) + " %");
+    addMeasurementToQueue({bpm, lastOximeterReport, VitalSignsEnum::HEART_RATE});
+    addMeasurementToQueue({SpO2, lastOximeterReport, VitalSignsEnum::OXIMETRY});   
   }
 }
 
