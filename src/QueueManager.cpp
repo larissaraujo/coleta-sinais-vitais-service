@@ -19,6 +19,5 @@ void addMeasurementToQueue(Measurement measurement) {
 Measurement removeMeasurementToQueue() {
     Measurement measurement;
     xQueueReceive(measurementsQueue, &measurement, portMAX_DELAY);
-    Serial.println(String(measurement.vitalSignType));
     return measurement;
 }

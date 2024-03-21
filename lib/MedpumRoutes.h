@@ -35,4 +35,10 @@ static const url OBSERVATION_URL = url::builder()
         .addPath(pathsParameters::OBSERVATION)
         .build();
 
+static const url BATCH_URL = url::builder()
+        .setBaseUrl(urls::MEDPLUM_API_URL)
+        .addPath(pathsParameters::FHIR)
+        .addPath(pathsParameters::R4)
+        .build();
+
 #endif

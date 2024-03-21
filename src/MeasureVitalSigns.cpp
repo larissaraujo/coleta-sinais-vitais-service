@@ -1,4 +1,5 @@
 #include <mutex>
+#include <list>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
@@ -6,6 +7,13 @@
 #include <../lib/VitalSigns.h>
 #include <../lib/MeasureVitalSigns.h>
 #include <../lib/QueueManager.h>
+
+std::mutex temperatureMutex;
+std::list<Measurement> temperatureMeasurements;
+std::mutex bpmMutex;
+std::list<Measurement> bpmMeasurements;
+std::mutex SpO2Mutex;
+std::list<Measurement> SpO2Measurements;
 
 // DS18B20
 #define ONE_WIRE_BUS 4
@@ -68,7 +76,10 @@ void measureTemperature() {
   if (millis() - lastTempRequest >= TEMPERATURE_REPORTING_PERIOD_MS) {
     temperature = sensors.getTempCByIndex(0);
     Serial.println("Temperature: " + String(temperature) + " °C");
-    addMeasurementToQueue({temperature, millis(), VitalSignsEnum::TEMPERATURE});
+    temperatureMutex.lock();
+    Measurement m = {temperature, millis()};
+    temperatureMeasurements.push_back(m);
+    temperatureMutex.unlock();
     measureAsyncTemperature();
   }
 }
@@ -82,8 +93,12 @@ void measureHeartRateAndOximetry() {
     lastOximeterReport = millis();
     Serial.println("Heart rate: " + String(bpm) + " bpm");
     Serial.println("SpO2: " + String(SpO2) + " %");
-    addMeasurementToQueue({bpm, lastOximeterReport, VitalSignsEnum::HEART_RATE});
-    addMeasurementToQueue({SpO2, lastOximeterReport, VitalSignsEnum::OXIMETRY});   
+    bpmMutex.lock();
+    bpmMeasurements.push_back({bpm, lastOximeterReport});
+    bpmMutex.unlock();
+    SpO2Mutex.lock();
+    SpO2Measurements.push_back({SpO2, lastOximeterReport});
+    SpO2Mutex.unlock(); 
   }
 }
 

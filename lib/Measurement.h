@@ -6,9 +6,6 @@
 struct Measurement {
     float value;
     unsigned long time;
-    VitalSignsEnum vitalSignType;
 };
-
-Observation toObservation(Measurement measurement);
 
 #endif

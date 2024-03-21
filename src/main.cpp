@@ -1,9 +1,10 @@
 #include <HTTPClient.h>
 #include <Wire.h>
+#include <list>
 #include <../lib/MeasureVitalSigns.h>
+#include <../lib/BuildObservations.h>
 #include <../lib/OAuthDataProvider.h>
 #include <../lib/ObservationDataProvider.h>
-#include <../lib/QueueManager.h>
 
 void taskMeasureVitalSigns(void *pvParameters) {
   initializeSensors();
@@ -27,16 +28,28 @@ void taskGetAcessToken(void *pvParameters) {
 }
 
 void taskPostObservation(void *pvParameters) {
+  std::list<Observation> observations;
+  vTaskDelay(5000);
   while (true) {
-    Measurement measurement = removeMeasurementToQueue();
-    postObservation(toObservation(measurement));
+    temperatureMutex.lock();
+    Serial.println(temperatureMeasurements.size());
+    for(Measurement m : temperatureMeasurements) {
+      observations.push_back(getTemperatureObservation(m));
+      Serial.println(m.value);
+    }
+    temperatureMeasurements.clear();
+    temperatureMutex.unlock();
+    if (!observations.empty()) {
+      postObservations(observations);
+      observations.clear();
+    }
+    vTaskDelay(5000);
   }
 }
 
 void setup() {
   Serial.begin(115200);
   Wire.begin(SDA, SCL);
-  createMeasurementsQueue();
 
   xTaskCreatePinnedToCore(taskMeasureVitalSigns, "taskMeasureVitalSigns", 5000, NULL, 3, NULL, 1);
   xTaskCreatePinnedToCore(taskGetAcessToken, "taskGetAcessToken", 5000, NULL, 2, NULL, 0);

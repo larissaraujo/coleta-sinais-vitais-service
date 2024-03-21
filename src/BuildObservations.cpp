@@ -1,5 +1,4 @@
-#include <../lib/Measurement.h>
-#include <../fhir/ResourceModels.h>
+#include <../lib/BuildObservations.h>
 
 Observation getTemperatureObservation(Measurement measurement) {
     return {
@@ -35,21 +34,5 @@ Observation getOximetryObservation(Measurement measurement) {
             Oximetry::valueCode
         }
     };
-}
-
-Observation toObservation(Measurement measurement) {
-    switch (measurement.vitalSignType) {
-        case VitalSignsEnum::TEMPERATURE:
-            return getTemperatureObservation(measurement);
-            break;
-        case VitalSignsEnum::HEART_RATE:
-            return getHeartRateObservation(measurement);
-            break;
-        case VitalSignsEnum::OXIMETRY:
-            return getOximetryObservation(measurement);
-            break;
-        default:
-            break;
-    }
 }
 
