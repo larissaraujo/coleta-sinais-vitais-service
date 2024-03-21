@@ -39,11 +39,27 @@ void taskPostObservation(void *pvParameters) {
     }
     temperatureMeasurements.clear();
     temperatureMutex.unlock();
+    bpmMutex.lock();
+    Serial.println(bpmMeasurements.size());
+    for(Measurement m : bpmMeasurements) {
+      observations.push_back(getHeartRateObservation(m));
+      Serial.println(m.value);
+    }
+    bpmMeasurements.clear();
+    bpmMutex.unlock();
+    SpO2Mutex.lock();
+    Serial.println(SpO2Measurements.size());
+    for(Measurement m : SpO2Measurements) {
+      observations.push_back(getOximetryObservation(m));
+      Serial.println(m.value);
+    }
+    SpO2Measurements.clear();
+    SpO2Mutex.unlock();
     if (!observations.empty()) {
       postObservations(observations);
       observations.clear();
     }
-    vTaskDelay(5000);
+    vTaskDelay(60000);
   }
 }
 

@@ -17,7 +17,7 @@ std::list<Measurement> SpO2Measurements;
 
 // DS18B20
 #define ONE_WIRE_BUS 4
-#define TEMPERATURE_REPORTING_PERIOD_MS 2000
+#define TEMPERATURE_REPORTING_PERIOD_MS 20000
 #define DS18B20_RESOLUTION 12
 
 OneWire oneWire(ONE_WIRE_BUS);
@@ -28,7 +28,7 @@ unsigned long lastTempRequest = 0;
 float temperature = 0.0;
 
 // MAX30100
-#define OXIMETER_REPORTING_PERIOD_MS 1000
+#define OXIMETER_REPORTING_PERIOD_MS 20000
 
 PulseOximeter pox;
 uint32_t lastOximeterReport = 0;
@@ -98,9 +98,10 @@ void measureHeartRateAndOximetry() {
     bpmMutex.unlock();
     SpO2Mutex.lock();
     SpO2Measurements.push_back({SpO2, lastOximeterReport});
-    SpO2Mutex.unlock(); 
+    SpO2Mutex.unlock();
   }
 }
+
 
 void measureVitalSigns() {
   measureTemperature();
