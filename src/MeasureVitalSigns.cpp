@@ -71,6 +71,10 @@ void initializeSensors() {
   configureMax30100();
 }
 
+void validateTemperature() {
+  
+}
+
 void measureTemperature() {
   if (millis() - lastTempRequest >= TEMPERATURE_REPORTING_PERIOD_MS) {
     temperature = sensors.getTempCByIndex(0);
@@ -91,8 +95,7 @@ void measureHeartRateAndOximetry() {
     SpO2 = pox.getSpO2();
     lastOximeterReport = millis();
     String dateTime = getDateTime(time(NULL));
-    Serial.printf("Heart rate: %f bpm\n", bpm);
-    Serial.printf("SpO2: %f %\n", SpO2);
+    Serial.printf("Heart rate: %f bpm SpO2: %f %\n", bpm, SpO2);
     bpmMutex.lock();
     bpmMeasurements.push_back({bpm, dateTime});
     bpmMutex.unlock();

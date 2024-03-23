@@ -1,7 +1,7 @@
 #include <../lib/config/WifiConfig.h>
 
-long timezone = -3;
-byte daysavetime = 0;
+#define GMT_OFFSET_SEC -3*3600
+#define DAY_SAVE_TIME 0*3600
 
 void connectWifi() {
   WiFi.mode(WIFI_STA);
@@ -13,5 +13,5 @@ void connectWifi() {
     Serial.print(".");
   }
   Serial.println("\nConectado");
-  configTime(3600 * timezone, daysavetime * 3600, "time.nist.gov", "0.pool.ntp.org", "1.pool.ntp.org");
+  configTime(GMT_OFFSET_SEC, DAY_SAVE_TIME, "time.nist.gov", "0.pool.ntp.org", "1.pool.ntp.org");
 }
