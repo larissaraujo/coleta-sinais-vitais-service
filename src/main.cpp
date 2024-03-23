@@ -1,25 +1,20 @@
-#include <Arduino.h>
-#include <Wifi.h>
 #include <HTTPClient.h>
 #include <Wire.h>
-#include <../lib/Temperature.h>
-#include <../lib/MedpumDataProvider.h>
+#include <list>
+#include <../lib/measurements/MeasureVitalSigns.h>
+#include <../lib/utils/BuildObservations.h>
+#include <../lib/dataProvider/OAuthDataProvider.h>
+#include <../lib/dataProvider/ObservationDataProvider.h>
 
-xQueueHandle measurementsQueue;
-
-void taskMeasureTemperature(void *pvParameters) {
-  Measurement measurement;
+void taskMeasureVitalSigns(void *pvParameters) {
+  initializeSensors();
   while (true) {
-    measurement = measureTemperature();
-    Serial.println(measurement.value);
-    //xQueueSend(measurementsQueue, &measurement, portMAX_DELAY);
-    vTaskDelay(TEMPERATURE_MEASUREMENT_PERIOD);
+    measureVitalSigns();
   }
 }
 
 void taskGetAcessToken(void *pvParameters) {
   while (true) {
-    Serial.println(token);
     getAccessToken();
     mutexToken.lock();
     if (token != "") {
@@ -32,17 +27,43 @@ void taskGetAcessToken(void *pvParameters) {
   }
 }
 
+void taskPostObservation(void *pvParameters) {
+  std::list<Observation> observations;
+  vTaskDelay(5000);
+  while (true) {
+    temperatureMutex.lock();
+    for(Measurement m : temperatureMeasurements) {
+      observations.push_back(getTemperatureObservation(m));
+    }
+    temperatureMeasurements.clear();
+    temperatureMutex.unlock();
+    bpmMutex.lock();
+    for(Measurement m : bpmMeasurements) {
+      observations.push_back(getHeartRateObservation(m));
+    }
+    bpmMeasurements.clear();
+    bpmMutex.unlock();
+    SpO2Mutex.lock();
+    for(Measurement m : SpO2Measurements) {
+      observations.push_back(getOximetryObservation(m));
+    }
+    SpO2Measurements.clear();
+    SpO2Mutex.unlock();
+    if (!observations.empty()) {
+      postObservations(observations);
+      observations.clear();
+    }
+    vTaskDelay(60000);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
-  measurementsQueue = xQueueCreate(5, sizeof(float));
+  Wire.begin(SDA, SCL);
 
-  if (measurementsQueue == NULL)  {
-     Serial.println("Erro: nao e possivel criar a fila");
-     while(1); /* Sem a fila o funcionamento esta comprometido. Nada mais deve ser feito. */
-  } 
-
-  xTaskCreatePinnedToCore(taskMeasureTemperature, "taskMeasureTemperature", 1000, NULL, 3, NULL, 1);
-  xTaskCreatePinnedToCore(taskGetAcessToken, "taskGetAcessToken", 5000, NULL, 2, NULL, 0);
+  xTaskCreatePinnedToCore(taskMeasureVitalSigns, "taskMeasureVitalSigns", 3000, NULL, 3, NULL, 1);
+  xTaskCreatePinnedToCore(taskGetAcessToken, "taskGetAcessToken", 4000, NULL, 2, NULL, 0);
+  xTaskCreatePinnedToCore(taskPostObservation, "taskPostObservation", 5000, NULL, 2, NULL, 0);
 
   delay(500);
 }

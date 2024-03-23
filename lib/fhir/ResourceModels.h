@@ -1,12 +1,13 @@
 #ifndef RESOURCE_MODELS_H
 #define RESOURCE_MODELS_H
 
+#include <list>
+#include <Arduino.h>
 #include <../lib/fhir/DataTypeModels.h>
 
 struct Observation {
-    const char* status;
     CodeableConcept code;
-    const char* effectiveDateTime;
+    String effectiveDateTime;
     Quantity valueQuantity;
 };
 

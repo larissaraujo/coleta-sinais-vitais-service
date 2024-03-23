@@ -51,6 +51,12 @@
         "typeinfo": "cpp",
         "esp32-hal.h": "c",
         "sntp.h": "c",
-        "esp_netif.h": "c"
+        "esp_netif.h": "c",
+        "chrono": "cpp",
+        "condition_variable": "cpp",
+        "ratio": "cpp",
+        "mutex": "cpp",
+        "thread": "cpp",
+        "list": "cpp"
     }
 }

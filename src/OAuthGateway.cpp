@@ -1,34 +1,40 @@
-#include <Arduino.h>
-#include <HTTPClient.h>
-#include <WiFi.h>
-#include <../lib/MedpumRoutes.h>
-#include <../lib/MedplumCertificate.h>
-#include <../lib/MedpumDataProvider.h>
-#include <../lib/WifiConfig.h>
+# include <ArduinoJson.h>
+#include <../lib/config/WifiConfig.h>
+#include <../lib/config/MedplumCertificate.h>
+#include <../lib/utils/Constants.h>
+#include <../lib/dataProvider/OAuthDataProvider.h>
 
-String token = "";
+std::string token;
 std::mutex mutexToken;
 
 void getAccessToken() {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     Serial.println("[HTTPS] begin...");
-    auto requestUrl = oauth::AUTHENTICATION_URL;
-    if (http.begin(requestUrl.toString().c_str(), MEDPLUM_API_CERTIFICATE)) {
-      Serial.println("[HTTPS] POST " + String(requestUrl.toString().c_str()));
-      http.addHeader(headers::CONTENT_TYPE, parameterValues::FORM_URLENCODED);
-      http.addHeader(headers::ACCEPT, "*/*");
-      http.addHeader(headers::ACCEPT_ENCODING, "gzip, deflate, br");
-      http.addHeader(headers::CONNECTION, "keep-alive");
-      int httpCode = http.POST(String(oauth::AUTHENTICATION_BODY.c_str()));
+    if (http.begin(AUTHENTICATION_API_URL, MEDPLUM_API_CERTIFICATE)) {
+      Serial.printf("[HTTPS] POST %s\n",AUTHENTICATION_API_URL);
+      http.addHeader(CONTENT_TYPE, FORM_URLENCODED);
+      http.addHeader(ACCEPT, "*/*");
+      http.addHeader(ACCEPT_ENCODING, "gzip, deflate, br");
+      http.addHeader(CONNECTION, "keep-alive");
+      
+      int httpCode = http.POST(AUTHENTICATION_REQUEST_BODY);
       Serial.printf("[HTTPS] POST... code: %d\n", httpCode);
 
       // httpCode will be negative on error
       if (httpCode > 0) {
         if (httpCode == HTTP_CODE_OK) {
+          JsonDocument filter;
+          filter["access_token"] = true;
+          JsonDocument doc;
+          DeserializationError error = deserializeJson(doc, http.getStream(), DeserializationOption::Filter(filter));
+          if (error) {
+            Serial.printf("deserializeJson() failed: %s\n", error.c_str());
+            return;
+          }
+          const char* accessToken = doc["access_token"]; 
           mutexToken.lock();
-          token = http.getString(); 
-          Serial.println(token);
+          token.assign(accessToken);
           mutexToken.unlock();
           return;
         }
@@ -37,7 +43,7 @@ void getAccessToken() {
       }
       http.end();
     } else {
-      Serial.println("[HTTPS] Não foi possível conectar-se à " + String(requestUrl.toString().c_str()));
+      Serial.printf("[HTTPS] Não foi possível conectar-se à %s\n", AUTHENTICATION_API_URL);
     }
   } else {
     connectWifi();
