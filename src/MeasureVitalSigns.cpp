@@ -4,9 +4,8 @@
 #include <DallasTemperature.h>
 #include <Wire.h>
 #include "MAX30100_PulseOximeter.h"
-#include <../lib/VitalSigns.h>
-#include <../lib/MeasureVitalSigns.h>
-#include <../lib/QueueManager.h>
+#include <../lib/measurements/MeasureVitalSigns.h>
+#include <../lib/utils/DateUtils.h>
 
 std::mutex temperatureMutex;
 std::list<Measurement> temperatureMeasurements;
@@ -75,9 +74,9 @@ void initializeSensors() {
 void measureTemperature() {
   if (millis() - lastTempRequest >= TEMPERATURE_REPORTING_PERIOD_MS) {
     temperature = sensors.getTempCByIndex(0);
-    Serial.println("Temperature: " + String(temperature) + " °C");
+    Serial.printf("Temperature: %f °C\n", temperature);
     temperatureMutex.lock();
-    Measurement m = {temperature, millis()};
+    Measurement m = {temperature, getDateTime(time(NULL))};
     temperatureMeasurements.push_back(m);
     temperatureMutex.unlock();
     measureAsyncTemperature();
@@ -91,17 +90,17 @@ void measureHeartRateAndOximetry() {
     bpm = pox.getHeartRate();
     SpO2 = pox.getSpO2();
     lastOximeterReport = millis();
-    Serial.println("Heart rate: " + String(bpm) + " bpm");
-    Serial.println("SpO2: " + String(SpO2) + " %");
+    String dateTime = getDateTime(time(NULL));
+    Serial.printf("Heart rate: %f bpm\n", bpm);
+    Serial.printf("SpO2: %f %\n", SpO2);
     bpmMutex.lock();
-    bpmMeasurements.push_back({bpm, lastOximeterReport});
+    bpmMeasurements.push_back({bpm, dateTime});
     bpmMutex.unlock();
     SpO2Mutex.lock();
-    SpO2Measurements.push_back({SpO2, lastOximeterReport});
+    SpO2Measurements.push_back({SpO2, dateTime});
     SpO2Mutex.unlock();
   }
 }
-
 
 void measureVitalSigns() {
   measureTemperature();

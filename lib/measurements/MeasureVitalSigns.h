@@ -3,7 +3,7 @@
 
 #include <mutex>
 #include <list>
-#include <../lib/Measurement.h>
+#include <../lib/measurements/Measurement.h>
 
 extern std::mutex temperatureMutex;
 extern std::list<Measurement> temperatureMeasurements;

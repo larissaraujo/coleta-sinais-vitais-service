@@ -1,7 +1,7 @@
 #ifndef BUILD_OBSERVATIONS_H
 #define BUILD_OBSERVATIONS_H
 
-#include <../lib/Measurement.h>
+#include <../lib/measurements/Measurement.h>
 #include <../fhir/ResourceModels.h>
 
 Observation getTemperatureObservation(Measurement measurement);

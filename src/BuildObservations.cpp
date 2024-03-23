@@ -1,37 +1,38 @@
-#include <../lib/BuildObservations.h>
+#include <../lib/utils/BuildObservations.h>
+#include <../lib/utils/Constants.h>
 
 Observation getTemperatureObservation(Measurement measurement) {
     return {
-        Temperature::codeableConcept,
-        "2024-03-19",
+        {{TEMPERATURE_CODE, TEMPERATURE_DISPLAY}, TEMPERATURE_DISPLAY},
+        measurement.dateTime.c_str(),
         {
             measurement.value,
-            Temperature::unit,
-            Temperature::valueCode
+            TEMPERATURE_UNIT,
+            TEMPERATURE_VALUE_CODE
         }
     };
 }
 
 Observation getHeartRateObservation(Measurement measurement) {
     return {
-        HeartRate::codeableConcept,
-        "2024-03-19",
+        {{HEART_RATE_CODE, HEART_RATE_DISPLAY}, HEART_RATE_DISPLAY},
+        measurement.dateTime.c_str(),
         {
             measurement.value,
-            HeartRate::unit,
-            HeartRate::valueCode
+            HEART_RATE_UNIT,
+            HEART_RATE_VALUE_CODE
         }
     };
 }
 
 Observation getOximetryObservation(Measurement measurement) {
     return {
-        Oximetry::codeableConcept,
-        "2024-03-19",
+        {{OXIMETRY_CODE, OXIMETRY_DISPLAY}, OXIMETRY_DISPLAY},
+        measurement.dateTime.c_str(),
         {
             measurement.value,
-            Oximetry::unit,
-            Oximetry::valueCode
+            OXIMETRY_UNIT,
+            OXIMETRY_VALUE_CODE
         }
     };
 }

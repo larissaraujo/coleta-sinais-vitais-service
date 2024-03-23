@@ -1,21 +1,20 @@
-#include <../lib/WifiConfig.h>
-#include <../lib/MedpumRoutes.h>
-#include <../lib/MedplumCertificate.h>
-#include <../lib/ObservationDataProvider.h>
-#include <../lib/OAuthDataProvider.h>
-#include <../lib/JsonManager.h>
+#include <../lib/config/WifiConfig.h>
+#include <../lib/config/MedplumCertificate.h>
+#include <../lib/utils/Constants.h>
+#include <../lib/dataProvider/ObservationDataProvider.h>
+#include <../lib/dataProvider/OAuthDataProvider.h>
+#include <../lib/utils/JsonManager.h>
 
 void postObservation(Observation observation) {
     if (WiFi.status() == WL_CONNECTED) {
         HTTPClient http;
-        auto requestUrl = OBSERVATION_URL;
-        if (http.begin(requestUrl.toString().c_str(), MEDPLUM_API_CERTIFICATE)) {
-            Serial.println("[HTTPS] POST " + String(requestUrl.toString().c_str()));
-            http.addHeader(headers::CONTENT_TYPE, parameterValues::FHIR_JSON);
-            http.addHeader(headers::ACCEPT, "*/*");
-            http.addHeader(headers::ACCEPT_ENCODING, "gzip, deflate, br");
+        if (http.begin(OBSERVATION_API_URL, MEDPLUM_API_CERTIFICATE)) {
+            Serial.printf("[HTTPS] POST %s\n", OBSERVATION_API_URL);
+            http.addHeader(CONTENT_TYPE, FHIR_JSON);
+            http.addHeader(ACCEPT, "*/*");
+            http.addHeader(ACCEPT_ENCODING, "gzip, deflate, br");
             mutexToken.lock();
-            http.addHeader(headers::AUTHORIZATION, "Bearer " + String(token.c_str()));
+            http.addHeader(AUTHORIZATION, "Bearer " + String(token.c_str()));
             mutexToken.unlock();
             String requestBody = convertObservation(observation);
             Serial.println(requestBody);
@@ -26,7 +25,7 @@ void postObservation(Observation observation) {
             }
             http.end();
         } else {
-            Serial.println("[HTTPS] Não foi possível conectar-se à " + String(requestUrl.toString().c_str()));
+            Serial.printf("[HTTPS] Não foi possível conectar-se à %s\n", OBSERVATION_API_URL);
         }
     }
 }
@@ -34,14 +33,13 @@ void postObservation(Observation observation) {
 void postObservations(std::list<Observation> observations) {
     if (WiFi.status() == WL_CONNECTED) {
         HTTPClient http;
-        auto requestUrl = BATCH_URL;
-        if (http.begin(requestUrl.toString().c_str(), MEDPLUM_API_CERTIFICATE)) {
-            Serial.println("[HTTPS] POST " + String(requestUrl.toString().c_str()));
-            http.addHeader(headers::CONTENT_TYPE, parameterValues::FHIR_JSON);
-            http.addHeader(headers::ACCEPT, "*/*");
-            http.addHeader(headers::ACCEPT_ENCODING, "gzip, deflate, br");
+        if (http.begin(BATCH_API_URL, MEDPLUM_API_CERTIFICATE)) {
+            Serial.printf("[HTTPS] POST %s\n", BATCH_API_URL);
+            http.addHeader(CONTENT_TYPE, FHIR_JSON);
+            http.addHeader(ACCEPT, "*/*");
+            http.addHeader(ACCEPT_ENCODING, "gzip, deflate, br");
             mutexToken.lock();
-            http.addHeader(headers::AUTHORIZATION, "Bearer " + String(token.c_str()));
+            http.addHeader(AUTHORIZATION, "Bearer " + String(token.c_str()));
             mutexToken.unlock();
             String requestBody = convertBatch(observations);
             Serial.println(requestBody);
@@ -52,7 +50,7 @@ void postObservations(std::list<Observation> observations) {
             }
             http.end();
         } else {
-            Serial.println("[HTTPS] Não foi possível conectar-se à " + String(requestUrl.toString().c_str()));
+            Serial.printf("[HTTPS] Não foi possível conectar-se à %s\n", BATCH_API_URL);
         }
     }
 }

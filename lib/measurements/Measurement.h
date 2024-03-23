@@ -1,11 +1,11 @@
 #ifndef MEASUREMENT_H
 #define MEASUREMENT_H
 
-#include <../lib/VitalSigns.h>
+#include <Arduino.h>
 
 struct Measurement {
     float value;
-    unsigned long time;
+    String dateTime;
 };
 
 #endif
