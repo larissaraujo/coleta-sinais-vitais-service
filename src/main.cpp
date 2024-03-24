@@ -28,36 +28,25 @@ void taskGetAcessToken(void *pvParameters) {
   }
 }
 
-void taskPostObservation(void *pvParameters) {
+void taskSendDataToServer(void *pvParameters) {
   std::list<Observation> observations;
+  std::string message = "";
   vTaskDelay(5000);
   while (true) {
-    temperatureMutex.lock();
-    for(Measurement m : temperatureMeasurements) {
-      observations.push_back(getTemperatureObservation(m));
-    }
-    temperatureMeasurements.clear();
-    temperatureMutex.unlock();
-    bpmMutex.lock();
-    for(Measurement m : bpmMeasurements) {
-      observations.push_back(getHeartRateObservation(m));
-    }
-    bpmMeasurements.clear();
-    bpmMutex.unlock();
-    SpO2Mutex.lock();
-    for(Measurement m : SpO2Measurements) {
-      observations.push_back(getOximetryObservation(m));
-    }
-    SpO2Measurements.clear();
-    SpO2Mutex.unlock();
-    std::string message = "";
+    measurementsMutex.lock();
+      for(Measurement m : measurements) {
+        observations.push_back(getObservation(m));
+      }
+      measurements.clear();
+    measurementsMutex.unlock();
     communicationsMutex.lock();
-    message = communications;
-    communications = "";
+      message = communications;
+      communications = "";
     communicationsMutex.unlock();
     if (!observations.empty() || message != "") {
       postBatch(observations, message);
       observations.clear();
+      message = "";
     }
     vTaskDelay(60000);
   }
@@ -69,7 +58,7 @@ void setup() {
 
   xTaskCreatePinnedToCore(taskMeasureVitalSigns, "taskMeasureVitalSigns", 3000, NULL, 5, NULL, 1);
   xTaskCreatePinnedToCore(taskGetAcessToken, "taskGetAcessToken", 4000, NULL, 2, NULL, 0);
-  xTaskCreatePinnedToCore(taskPostObservation, "taskPostObservation", 5000, NULL, 3, NULL, 0);
+  xTaskCreatePinnedToCore(taskSendDataToServer, "taskSendDataToServer", 5000, NULL, 3, NULL, 0);
 
   delay(500);
 }

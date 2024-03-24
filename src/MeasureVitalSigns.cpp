@@ -9,12 +9,8 @@
 #include <../lib/utils/Constants.h>
 #include <../lib/fhir/ResourceModels.h>
 
-std::mutex temperatureMutex;
-std::list<Measurement> temperatureMeasurements;
-std::mutex bpmMutex;
-std::list<Measurement> bpmMeasurements;
-std::mutex SpO2Mutex;
-std::list<Measurement> SpO2Measurements;
+std::mutex measurementsMutex;
+std::list<Measurement> measurements;
 
 std::string communications = "";
 std::mutex communicationsMutex;
@@ -131,10 +127,10 @@ void measureTemperature() {
     temperature = sensors.getTempCByIndex(0);
     Serial.printf("Temperature: %f °C\n", temperature);
     if (temperature > MIN_VALID_TEMPERATURE) {
-      Measurement m = { temperature, getDateTime(time(NULL)) };
-      temperatureMutex.lock();
-      temperatureMeasurements.push_back(m);
-      temperatureMutex.unlock();
+      Measurement m = {temperature, getDateTime(time(NULL)), VitalSign::TEMPERATURE};
+      measurementsMutex.lock();
+      measurements.push_back(m);
+      measurementsMutex.unlock();
       validateTemperature(m);
     }
     measureAsyncTemperature();
@@ -157,16 +153,14 @@ void measureHeartRateAndOximetry() {
     String dateTime = getDateTime(time(NULL));
     Serial.printf("Heart rate: %f bpm SpO2: %f %\n", bpm, SpO2);
     if (bpm > MIN_VALID_HEART_RATE && SpO2 > MIN_VALID_OXIMETRY) {
-      Measurement m = {bpm, dateTime};
-      bpmMutex.lock();
-      bpmMeasurements.push_back(m);
-      bpmMutex.unlock();
+      Measurement m = {bpm, dateTime, VitalSign::HEART_RATE};
+      Measurement n = {SpO2, dateTime, VitalSign::OXIMETRY};
+      measurementsMutex.lock();
+      measurements.push_back(m);
+      measurements.push_back(n);
+      measurementsMutex.unlock();
       validateHeartRate(m);
-      m = {SpO2, dateTime};
-      SpO2Mutex.lock();
-      SpO2Measurements.push_back(m);
-      SpO2Mutex.unlock();
-      validateOximetry(m);
+      validateOximetry(n);
     }
   }
 }
