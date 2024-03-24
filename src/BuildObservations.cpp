@@ -37,3 +37,18 @@ Observation getOximetryObservation(Measurement measurement) {
     };
 }
 
+Observation getObservation(Measurement measurement) {
+    switch (measurement.type){
+        case TEMPERATURE:
+            return getTemperatureObservation(measurement);
+            break;
+        case HEART_RATE:
+            return getHeartRateObservation(measurement);
+            break;
+        case OXIMETRY:
+            return getOximetryObservation(measurement);
+            break;
+        default:
+            break;
+    }
+}

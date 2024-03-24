@@ -4,8 +4,6 @@
 #include <../lib/measurements/Measurement.h>
 #include <../fhir/ResourceModels.h>
 
-Observation getTemperatureObservation(Measurement measurement);
-Observation getHeartRateObservation(Measurement measurement);
-Observation getOximetryObservation(Measurement measurement);
+Observation getObservation(Measurement measurement);
 
 #endif

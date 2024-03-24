@@ -10,16 +10,15 @@ std::mutex mutexToken;
 void getAccessToken() {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    Serial.println("[HTTPS] begin...");
+    Serial.println("[HTTPS] getAccessToken...");
     if (http.begin(AUTHENTICATION_API_URL, MEDPLUM_API_CERTIFICATE)) {
-      Serial.printf("[HTTPS] POST %s\n",AUTHENTICATION_API_URL);
       http.addHeader(CONTENT_TYPE, FORM_URLENCODED);
       http.addHeader(ACCEPT, "*/*");
       http.addHeader(ACCEPT_ENCODING, "gzip, deflate, br");
       http.addHeader(CONNECTION, "keep-alive");
       
       int httpCode = http.POST(AUTHENTICATION_REQUEST_BODY);
-      Serial.printf("[HTTPS] POST... code: %d\n", httpCode);
+      Serial.printf("[HTTPS] POST %s code: %d\n", AUTHENTICATION_API_URL, httpCode);
 
       // httpCode will be negative on error
       if (httpCode > 0) {
