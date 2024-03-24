@@ -12,6 +12,9 @@ extern std::list<Measurement> bpmMeasurements;
 extern std::mutex SpO2Mutex;
 extern std::list<Measurement> SpO2Measurements;
 
+extern std::string communications;
+extern std::mutex communicationsMutex;
+
 void initializeSensors();
 void measureVitalSigns();
 

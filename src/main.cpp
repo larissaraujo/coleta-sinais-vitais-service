@@ -1,10 +1,11 @@
 #include <HTTPClient.h>
 #include <Wire.h>
 #include <list>
+#include <../lib/utils/Constants.h>
 #include <../lib/measurements/MeasureVitalSigns.h>
 #include <../lib/utils/BuildObservations.h>
 #include <../lib/dataProvider/OAuthDataProvider.h>
-#include <../lib/dataProvider/ObservationDataProvider.h>
+#include <../lib/dataProvider/ResourcesDataProvider.h>
 
 void taskMeasureVitalSigns(void *pvParameters) {
   initializeSensors();
@@ -49,8 +50,13 @@ void taskPostObservation(void *pvParameters) {
     }
     SpO2Measurements.clear();
     SpO2Mutex.unlock();
-    if (!observations.empty()) {
-      postObservations(observations);
+    std::string message = "";
+    communicationsMutex.lock();
+    message = communications;
+    communications = "";
+    communicationsMutex.unlock();
+    if (!observations.empty() || message != "") {
+      postBatch(observations, message);
       observations.clear();
     }
     vTaskDelay(60000);
@@ -61,9 +67,9 @@ void setup() {
   Serial.begin(115200);
   Wire.begin(SDA, SCL);
 
-  xTaskCreatePinnedToCore(taskMeasureVitalSigns, "taskMeasureVitalSigns", 3000, NULL, 3, NULL, 1);
+  xTaskCreatePinnedToCore(taskMeasureVitalSigns, "taskMeasureVitalSigns", 3000, NULL, 5, NULL, 1);
   xTaskCreatePinnedToCore(taskGetAcessToken, "taskGetAcessToken", 4000, NULL, 2, NULL, 0);
-  xTaskCreatePinnedToCore(taskPostObservation, "taskPostObservation", 5000, NULL, 2, NULL, 0);
+  xTaskCreatePinnedToCore(taskPostObservation, "taskPostObservation", 5000, NULL, 3, NULL, 0);
 
   delay(500);
 }

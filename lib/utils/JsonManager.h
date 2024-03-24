@@ -5,7 +5,6 @@
 #include <list>
 #include <../lib/fhir/ResourceModels.h>
 
-String convertObservation(Observation observation);
-String convertBatch(std::list<Observation> observation);
+String convertBatch(std::list<Observation> observations, std::string communications);
 
 #endif
