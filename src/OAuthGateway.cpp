@@ -5,7 +5,6 @@
 #include <../lib/dataProvider/OAuthDataProvider.h>
 
 std::string token;
-std::mutex mutexToken;
 
 void getAccessToken() {
   if (WiFi.status() == WL_CONNECTED) {
@@ -32,9 +31,9 @@ void getAccessToken() {
             return;
           }
           const char* accessToken = doc["access_token"]; 
-          mutexToken.lock();
+          xSemaphoreTake(xSemaphoreToken, (TickType_t) 10);
           token.assign(accessToken);
-          mutexToken.unlock();
+          xSemaphoreGive(xSemaphoreToken);
           return;
         }
       } else {
