@@ -13,9 +13,9 @@ void postBatch(String requestBody) {
             http.addHeader(CONTENT_TYPE, FHIR_JSON);
             http.addHeader(ACCEPT, "*/*");
             http.addHeader(ACCEPT_ENCODING, "gzip, deflate, br");
-            mutexToken.lock();
+            xSemaphoreTake(xSemaphoreToken, (TickType_t) 10);
             http.addHeader(AUTHORIZATION, "Bearer " + String(token.c_str()));
-            mutexToken.unlock();
+            xSemaphoreGive(xSemaphoreToken);
             Serial.println(requestBody);
             int httpCode = http.POST(requestBody);
             Serial.printf("[HTTPS] POST %s code: %d\n", BATCH_API_URL, httpCode);

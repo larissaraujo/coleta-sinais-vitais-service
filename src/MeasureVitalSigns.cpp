@@ -9,11 +9,8 @@
 #include <../lib/utils/Constants.h>
 #include <../lib/fhir/ResourceModels.h>
 
-std::mutex measurementsMutex;
 std::list<Measurement> measurements;
-
 std::string communications = "";
-std::mutex communicationsMutex;
 
 // DS18B20
 #define ONE_WIRE_BUS 4
@@ -78,12 +75,12 @@ void initializeSensors() {
 }
 
 void addCommunication(std::string payload) {
-    communicationsMutex.lock();
+    xSemaphoreTake(xSemaphoreCommunications, (TickType_t) 10);
     if (communications == "") {
       communications = "Paciente apresenta: ";
     }
     communications.append("\n").append(payload);
-    communicationsMutex.unlock();
+    xSemaphoreGive(xSemaphoreCommunications);
 }
 
 void validateTemperature(Measurement measurement) {
@@ -128,9 +125,9 @@ void measureTemperature() {
     Serial.printf("Temperature: %f °C\n", temperature);
     if (temperature > MIN_VALID_TEMPERATURE) {
       Measurement m = {temperature, getDateTime(time(NULL)), VitalSign::TEMPERATURE};
-      measurementsMutex.lock();
+      xSemaphoreTake(xSemaphoreMeasurements, (TickType_t) 10);
       measurements.push_back(m);
-      measurementsMutex.unlock();
+      xSemaphoreGive(xSemaphoreMeasurements);
       validateTemperature(m);
     }
     measureAsyncTemperature();
@@ -155,10 +152,10 @@ void measureHeartRateAndOximetry() {
     if (bpm > MIN_VALID_HEART_RATE && SpO2 > MIN_VALID_OXIMETRY) {
       Measurement m = {bpm, dateTime, VitalSign::HEART_RATE};
       Measurement n = {SpO2, dateTime, VitalSign::OXIMETRY};
-      measurementsMutex.lock();
+      xSemaphoreTake(xSemaphoreMeasurements, (TickType_t) 10);
       measurements.push_back(m);
       measurements.push_back(n);
-      measurementsMutex.unlock();
+      xSemaphoreGive(xSemaphoreMeasurements);
       validateHeartRate(m);
       validateOximetry(n);
     }

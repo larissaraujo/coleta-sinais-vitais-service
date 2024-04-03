@@ -7,6 +7,10 @@
 #include <../lib/dataProvider/OAuthDataProvider.h>
 #include <../lib/dataProvider/ResourcesDataProvider.h>
 
+SemaphoreHandle_t xSemaphoreCommunications;
+SemaphoreHandle_t xSemaphoreMeasurements;
+SemaphoreHandle_t xSemaphoreToken;
+
 void taskMeasureVitalSigns(void *pvParameters) {
   initializeSensors();
   while (true) {
@@ -17,12 +21,12 @@ void taskMeasureVitalSigns(void *pvParameters) {
 void taskGetAcessToken(void *pvParameters) {
   while (true) {
     getAccessToken();
-    mutexToken.lock();
+    xSemaphoreTake(xSemaphoreToken, (TickType_t) 10);
     if (token != "") {
-      mutexToken.unlock();
-      vTaskDelay(3600000);
+      xSemaphoreGive(xSemaphoreToken);
+      vTaskDelay(portTICK_PERIOD_MS*3600000);
     } else {
-      mutexToken.unlock();
+      xSemaphoreGive(xSemaphoreToken);
       vTaskDelay(500);
     }
   }
@@ -33,16 +37,16 @@ void taskSendDataToServer(void *pvParameters) {
   std::string message = "";
   vTaskDelay(5000);
   while (true) {
-    measurementsMutex.lock();
+    xSemaphoreTake(xSemaphoreMeasurements, (TickType_t) 10);
       for(Measurement m : measurements) {
         observations.push_back(getObservation(m));
       }
       measurements.clear();
-    measurementsMutex.unlock();
-    communicationsMutex.lock();
+    xSemaphoreGive(xSemaphoreMeasurements);
+    xSemaphoreTake(xSemaphoreCommunications, (TickType_t) 10);
       message = communications;
       communications = "";
-    communicationsMutex.unlock();
+    xSemaphoreGive(xSemaphoreCommunications);
     if (!observations.empty() || message != "") {
       postBatch(observations, message);
       observations.clear();
@@ -55,6 +59,21 @@ void taskSendDataToServer(void *pvParameters) {
 void setup() {
   Serial.begin(115200);
   Wire.begin(SDA, SCL);
+
+  xSemaphoreCommunications = xSemaphoreCreateMutex();
+  if(xSemaphoreCommunications == NULL) {
+    Serial.printf("Falha ao criar o Mutex para Comunicações\n");
+  }
+
+  xSemaphoreMeasurements = xSemaphoreCreateMutex();
+  if(xSemaphoreMeasurements == NULL) {
+    Serial.printf("Falha ao criar o Mutex para Medições\n");
+  }
+
+  xSemaphoreToken = xSemaphoreCreateMutex();
+  if(xSemaphoreToken == NULL) {
+    Serial.printf("Falha ao criar o Mutex para Token de acesso\n");
+  }
 
   xTaskCreatePinnedToCore(taskMeasureVitalSigns, "taskMeasureVitalSigns", 3000, NULL, 5, NULL, 1);
   xTaskCreatePinnedToCore(taskGetAcessToken, "taskGetAcessToken", 4000, NULL, 2, NULL, 0);
