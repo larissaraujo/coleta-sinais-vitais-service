@@ -7,7 +7,7 @@
 #include <../lib/dataProvider/OAuthDataProvider.h>
 #include <../lib/dataProvider/ResourcesDataProvider.h>
 
-bool sendData = false;
+bool sendData = true;
 
 SemaphoreHandle_t xSemaphoreCommunications;
 SemaphoreHandle_t xSemaphoreMeasurements;
