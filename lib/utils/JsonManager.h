@@ -7,4 +7,6 @@
 
 String convertBatch(std::list<Observation> observations, std::string communications);
 
+std::list<ObservationDefinition> convertToObservationDefinition(JsonArray entries);
+
 #endif

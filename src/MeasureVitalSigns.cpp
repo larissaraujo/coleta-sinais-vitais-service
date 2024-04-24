@@ -8,17 +8,16 @@
 #include <../lib/utils/DateUtils.h>
 #include <../lib/utils/Constants.h>
 #include <../lib/fhir/ResourceModels.h>
+#include <../lib/utils/ReferenceRanges.h>
 
 std::list<Measurement> measurements;
 std::string communications = "";
+std::map<std::string, ReferenceValues> referenceRanges;
 
 // DS18B20
 #define ONE_WIRE_BUS 4
 #define TEMPERATURE_REPORTING_PERIOD_MS 20000
 #define DS18B20_RESOLUTION 12
-#define MIN_VALID_TEMPERATURE 30
-#define MIN_VALID_HEART_RATE 0
-#define MIN_VALID_OXIMETRY 0
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
@@ -84,7 +83,7 @@ void addCommunication(std::string payload) {
 }
 
 void validateTemperature(Measurement measurement) {
-  if (measurement.value <= TEMPERATURE_LOW || measurement.value >= TEMPERATURE_HIGH) {
+  if (isNotNormal(measurement.value, referenceRanges[TEMPERATURE_CODE])) {
     std::string payload = "Temperatura corporal anormal: ";
     payload += std::to_string(measurement.value);
     payload += " °C em ";
@@ -96,7 +95,7 @@ void validateTemperature(Measurement measurement) {
 }
 
 void validateHeartRate(Measurement measurement) {
-  if (measurement.value <= HEART_RATE_LOW || measurement.value >= HEART_RATE_HIGH) {
+  if (isNotNormal(measurement.value, referenceRanges[HEART_RATE_CODE])) {
     std::string payload = "Frequência cardíaca anormal: ";
     payload += std::to_string(measurement.value);
     payload += " bpm em ";
@@ -108,7 +107,7 @@ void validateHeartRate(Measurement measurement) {
 }
 
 void validateOximetry(Measurement measurement) {
-  if (measurement.value < OXIMETRY_LOW) {
+  if (isNotNormal(measurement.value,  referenceRanges[OXIMETRY_CODE])) {
     std::string payload = "Saturação de oxigênio anormal: ";
     payload += std::to_string(measurement.value);
     payload += " SpO2 em ";
@@ -123,12 +122,14 @@ void measureTemperature() {
   if (millis() - lastTempRequest >= TEMPERATURE_REPORTING_PERIOD_MS) {
     temperature = sensors.getTempCByIndex(0);
     Serial.printf("Temperature: %f °C\n", temperature);
-    if (temperature > MIN_VALID_TEMPERATURE) {
+    if (isValid(temperature, referenceRanges[TEMPERATURE_CODE])) {
       Measurement m = {temperature, getDateTime(time(NULL)), VitalSign::TEMPERATURE};
       xSemaphoreTake(xSemaphoreMeasurements, (TickType_t) 10);
       measurements.push_back(m);
       xSemaphoreGive(xSemaphoreMeasurements);
       validateTemperature(m);
+    } else {
+      Serial.println("Medição inválida do termômetro");
     }
     measureAsyncTemperature();
   }
@@ -149,7 +150,7 @@ void measureHeartRateAndOximetry() {
     lastOximeterReport = millis();
     String dateTime = getDateTime(time(NULL));
     Serial.printf("Heart rate: %f bpm SpO2: %f %\n", bpm, SpO2);
-    if (bpm > MIN_VALID_HEART_RATE && SpO2 > MIN_VALID_OXIMETRY) {
+    if (isValid(bpm, referenceRanges[HEART_RATE_CODE]) && isValid(SpO2, referenceRanges[OXIMETRY_CODE])) {
       Measurement m = {bpm, dateTime, VitalSign::HEART_RATE};
       Measurement n = {SpO2, dateTime, VitalSign::OXIMETRY};
       xSemaphoreTake(xSemaphoreMeasurements, (TickType_t) 10);
@@ -158,6 +159,8 @@ void measureHeartRateAndOximetry() {
       xSemaphoreGive(xSemaphoreMeasurements);
       validateHeartRate(m);
       validateOximetry(n);
+    } else {
+      Serial.println("Medição inválida do oxímetro");
     }
   }
 }

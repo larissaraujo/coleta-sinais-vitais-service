@@ -11,4 +11,9 @@ struct Observation {
     Quantity valueQuantity;
 };
 
+struct ObservationDefinition {
+    String code;
+    std::list<ObservationDefinitionQualifiedInterval> qualifiedInterval;
+};
+
 #endif

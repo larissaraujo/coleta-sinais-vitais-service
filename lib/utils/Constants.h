@@ -4,6 +4,7 @@
 // Urls
 #define BATCH_API_URL "https://api.medplum.com/fhir/R4"
 #define OBSERVATION_API_URL "https://api.medplum.com/fhir/R4/Observation"
+#define OBSERVATION_DEFINITION_API_URL "https://api.medplum.com/fhir/R4/ObservationDefinition"
 #define AUTHENTICATION_API_URL "https://api.medplum.com/oauth2/token"
 
 // Headers
@@ -41,21 +42,16 @@
 #define TEMPERATURE_DISPLAY "Body temperature"
 #define TEMPERATURE_VALUE_CODE "Cel"
 #define TEMPERATURE_UNIT "C"
-#define TEMPERATURE_LOW 35
-#define TEMPERATURE_HIGH 37.8
 
 #define HEART_RATE_CODE "8867-4"
 #define HEART_RATE_DISPLAY "Heart Rate"
 #define HEART_RATE_VALUE_CODE "/min"
 #define HEART_RATE_UNIT "beats/minute"
-#define HEART_RATE_LOW 50
-#define HEART_RATE_HIGH 100
 
 #define OXIMETRY_CODE "2708-6"
 #define OXIMETRY_DISPLAY "Oxygen saturation"
 #define OXIMETRY_VALUE_CODE "%"
 #define OXIMETRY_UNIT "%"
-#define OXIMETRY_LOW 90
 
 #define AUTHENTICATION_REQUEST_BODY CLIENT_ID "=" CLIENT_ID_VALUE "&" CLIENT_SECRET "=" CLIENT_SECRET_VALUE "&" GRANT_TYPE "=" CLIENT_CREDENTIALS
 

@@ -75,3 +75,39 @@ String convertBatch(std::list<Observation> observations, std::string communicati
     return output;
 }
 
+ObservationDefinitionQualifiedInterval getQualifiedInterval(JsonObject interval) {
+    JsonObject range = interval["range"];
+    JsonObject high = range["high"];
+    JsonObject low = range["low"];
+    return {
+        category: interval["category"],
+        range: {
+            low: {
+                value: low["value"],
+                unit: low["unit"]
+            },
+            high: {
+                value: high["value"],
+                unit: high["unit"],
+            }
+        },
+        condition: interval["condition"]
+    };
+}
+
+std::list<ObservationDefinition> convertToObservationDefinition(JsonArray entries) {
+    std::list<ObservationDefinition> definitions;
+    for (auto entry : entries) {
+        JsonObject resource = entry["resource"];
+        const char* code = resource["code"]["coding"][0]["code"];
+
+        JsonArray qualifiedIntervals = resource["qualifiedInterval"];
+        std::list<ObservationDefinitionQualifiedInterval> intervals;
+        for (auto interval : qualifiedIntervals) {
+            intervals.push_back(getQualifiedInterval(interval));
+        }
+
+        definitions.push_back({ code, intervals});
+    }
+    return definitions;
+}
