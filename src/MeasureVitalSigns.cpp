@@ -40,7 +40,7 @@ void onBeatDetected() {
 }
 
 void configureMax30100() {
-  pox.setIRLedCurrent(MAX30100_LED_CURR_7_6MA);
+  pox.setIRLedCurrent(MAX30100_LED_CURR_24MA);
   pox.setOnBeatDetectedCallback(onBeatDetected);
 }
 
@@ -82,13 +82,16 @@ void addCommunication(std::string payload) {
     xSemaphoreGive(xSemaphoreCommunications);
 }
 
+std::string formatValue(float value, int precision) {
+  std::string valueText = std::to_string(value);
+  return valueText.substr(0, valueText.find(".") + precision);
+}
+
 void validateTemperature(Measurement measurement) {
   if (isNotNormal(measurement.value, referenceRanges[TEMPERATURE_CODE])) {
     std::string payload = "Temperatura corporal anormal: ";
-    payload += std::to_string(measurement.value);
-    payload += " °C em ";
-    payload += measurement.dateTime.c_str(); 
-    payload += ".";
+    payload += formatValue(measurement.value, 2);
+    payload += " °C";
     Serial.println(payload.c_str());
     addCommunication(payload);
   }
@@ -97,10 +100,8 @@ void validateTemperature(Measurement measurement) {
 void validateHeartRate(Measurement measurement) {
   if (isNotNormal(measurement.value, referenceRanges[HEART_RATE_CODE])) {
     std::string payload = "Frequência cardíaca anormal: ";
-    payload += std::to_string(measurement.value);
-    payload += " bpm em ";
-    payload += measurement.dateTime.c_str(); 
-    payload += ".";
+    payload += formatValue(measurement.value, 0);
+    payload += " bpm";
     Serial.println(payload.c_str());
     addCommunication(payload);
   }
@@ -109,10 +110,8 @@ void validateHeartRate(Measurement measurement) {
 void validateOximetry(Measurement measurement) {
   if (isNotNormal(measurement.value,  referenceRanges[OXIMETRY_CODE])) {
     std::string payload = "Saturação de oxigênio anormal: ";
-    payload += std::to_string(measurement.value);
-    payload += " SpO2 em ";
-    payload += measurement.dateTime.c_str(); 
-    payload += ".";
+    payload += formatValue(measurement.value, 0);
+    payload += " %";
     Serial.println(payload.c_str());
     addCommunication(payload);
   }
