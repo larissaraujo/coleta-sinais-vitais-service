@@ -17,6 +17,7 @@ std::map<std::string, ReferenceValues> referenceRanges;
 // DS18B20
 #define ONE_WIRE_BUS 4
 #define TEMPERATURE_REPORTING_PERIOD_MS 20000
+#define TEMPERATURE_MEAN_SAMPLES 4
 #define DS18B20_RESOLUTION 12
 
 OneWire oneWire(ONE_WIRE_BUS);
@@ -25,14 +26,20 @@ DeviceAddress tempDeviceAddress;
 
 unsigned long lastTempRequest = 0;
 float temperature = 0.0;
+float sumTemperature = 0.0;
+int countTemperature = 0;
 
 // MAX30100
 #define OXIMETER_REPORTING_PERIOD_MS 20000
+#define OXIMETER_MEAN_SAMPLES 4
 
 PulseOximeter pox;
 uint32_t lastOximeterReport = 0;
 uint32_t lastBeat = 0;
 float bpm, SpO2;
+float sumBpm = 0.0;
+float sumSpO2 = 0.0;
+int countOximeter = 0;
 
 void onBeatDetected() {
   Serial.println("Beat!");
@@ -40,7 +47,7 @@ void onBeatDetected() {
 }
 
 void configureMax30100() {
-  pox.setIRLedCurrent(MAX30100_LED_CURR_24MA);
+  pox.setIRLedCurrent(MAX30100_LED_CURR_27_1MA);
   pox.setOnBeatDetectedCallback(onBeatDetected);
 }
 
@@ -122,11 +129,20 @@ void measureTemperature() {
     temperature = sensors.getTempCByIndex(0);
     Serial.printf("Temperature: %f °C\n", temperature);
     if (isValid(temperature, referenceRanges[TEMPERATURE_CODE])) {
-      Measurement m = {temperature, getDateTime(time(NULL)), VitalSign::TEMPERATURE};
-      xSemaphoreTake(xSemaphoreMeasurements, (TickType_t) 10);
-      measurements.push_back(m);
-      xSemaphoreGive(xSemaphoreMeasurements);
-      validateTemperature(m);
+      sumTemperature += temperature; 
+      countTemperature++;
+      Serial.printf("[COUNT] - Temperature: %d \n", countTemperature);
+      if (countTemperature >= TEMPERATURE_MEAN_SAMPLES) {
+        float media = sumTemperature/countTemperature;
+        Serial.printf("[MÉDIA] - Temperature: %f °C\n", media);
+        Measurement m = {media, getDateTime(time(NULL)), VitalSign::TEMPERATURE};
+        xSemaphoreTake(xSemaphoreMeasurements, (TickType_t) 10);
+        measurements.push_back(m);
+        xSemaphoreGive(xSemaphoreMeasurements);
+        validateTemperature(m);
+        sumTemperature = 0.0;
+        countTemperature = 0;
+      }
     } else {
       Serial.println("Medição inválida do termômetro");
     }
@@ -147,17 +163,30 @@ void measureHeartRateAndOximetry() {
     bpm = pox.getHeartRate();
     SpO2 = pox.getSpO2();
     lastOximeterReport = millis();
-    String dateTime = getDateTime(time(NULL));
     Serial.printf("Heart rate: %f bpm SpO2: %f %\n", bpm, SpO2);
     if (isValid(bpm, referenceRanges[HEART_RATE_CODE]) && isValid(SpO2, referenceRanges[OXIMETRY_CODE])) {
-      Measurement m = {bpm, dateTime, VitalSign::HEART_RATE};
-      Measurement n = {SpO2, dateTime, VitalSign::OXIMETRY};
-      xSemaphoreTake(xSemaphoreMeasurements, (TickType_t) 10);
-      measurements.push_back(m);
-      measurements.push_back(n);
-      xSemaphoreGive(xSemaphoreMeasurements);
-      validateHeartRate(m);
-      validateOximetry(n);
+      sumBpm += bpm;
+      sumSpO2 += SpO2;
+      countOximeter++;
+      Serial.printf("[COUNT] - Oximetro: %d \n", countOximeter);
+      if (countOximeter >= OXIMETER_MEAN_SAMPLES) {
+        float mediaBpm = sumBpm/countOximeter;
+        float mediaSpO2 = sumSpO2/countOximeter;
+        Serial.printf("[MÉDIA] - Heart rate: %f bpm SpO2: %f %\n", mediaBpm, mediaSpO2);
+        String dateTime = getDateTime(time(NULL));
+        Measurement m = {mediaBpm, dateTime, VitalSign::HEART_RATE};
+        Measurement n = {mediaSpO2, dateTime, VitalSign::OXIMETRY};
+        xSemaphoreTake(xSemaphoreMeasurements, (TickType_t) 10);
+        measurements.push_back(m);
+        measurements.push_back(n);
+        xSemaphoreGive(xSemaphoreMeasurements);
+        validateHeartRate(m);
+        validateOximetry(n);
+        sumBpm = 0.0;
+        sumSpO2 = 0.0;
+        countOximeter = 0;
+      }
+
     } else {
       Serial.println("Medição inválida do oxímetro");
     }

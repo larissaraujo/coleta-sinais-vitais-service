@@ -20,8 +20,8 @@
 #define GRANT_TYPE "grant_type"
 
 // Parameter Values
-#define CLIENT_ID_VALUE "b231c1a7-be0c-449d-b460-efa6eb99cf02"
-#define CLIENT_SECRET_VALUE "7c9549d9d72ae097ad5c65c3571f73ba2bd8b944d2fc9d2326faf6b2975fa1b3"
+#define CLIENT_ID_VALUE "35810d37-37d6-4e0c-b4aa-163300381843"
+#define CLIENT_SECRET_VALUE "435fb7349ca6fe06dfa010d79e5b2ff5cde4c327b09356121e5f4b598e3b053b"
 #define FORM_URLENCODED "application/x-www-form-urlencoded"
 #define FHIR_JSON "application/fhir+json"
 #define CLIENT_CREDENTIALS "client_credentials"
@@ -32,7 +32,7 @@
 #define OBSERVATION_CATEGORY_DYSPLAY "Vital Signs"
 #define OBSERVATION_CODE_SYSTEM "http://loinc.org"
 #define OBSERVATION_QUANTITY_SYSTEM "http://unitsofmeasure.org"
-#define PATIENT_ID "Patient/c8b8a5c3-874f-4ce3-921f-d22e38d4bb09"
+#define PATIENT_ID "Patient/a692296e-e91d-461a-acfa-90b2245e1fc2"
 #define RESOURCE_OBSERVATION "Observation"
 #define STATUS_PRELIMINARY "preliminary"
 #define RESOURCE_COMMUNICATION "Communication"
